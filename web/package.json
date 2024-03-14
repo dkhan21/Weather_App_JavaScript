@@ -11,9 +11,11 @@
     ]
   },
   "dependencies": {
+    "@redwoodjs/auth-dbauth-web": "7.1.2",
     "@redwoodjs/forms": "7.1.2",
     "@redwoodjs/router": "7.1.2",
     "@redwoodjs/web": "7.1.2",
+    "@simplewebauthn/browser": "^7",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
