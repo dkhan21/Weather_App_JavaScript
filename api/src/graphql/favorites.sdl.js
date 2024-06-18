@@ -22,7 +22,7 @@ export const schema = gql`
 
   type Mutation {
     createFavorite(input: CreateFavoriteInput!): Favorite! @skipAuth
-    updateFavorite(id: String!, input: UpdateFavoriteInput!): Favorite! @skipAuth
+    updateFavorite(id: Int!, input: UpdateFavoriteInput!): Favorite! @skipAuth
     deleteFavorite(id: Int!): Favorite! @skipAuth
   }
 `;

@@ -9,9 +9,11 @@ import IconWiSnowflakeCold from './snow';
 import IconWiStrongWind from './wind';
 import IconWiMoonrise from './moon';
 import { FaTrash } from 'react-icons/fa';
+import { toast } from '@redwoodjs/web/toast'
+
 
 const apiUrl = 'https://api.tomorrow.io/v4/weather/forecast';
-const apiKey = 'LHpzgcsFLTJaoGReRuYIKDxYzz4IeSLz';
+const apiKey = 'ANYDS4YH4JZWR9YS8SC2WT7PG';
 
 export const QUERY = gql`
   query FavoritesQuery {
@@ -47,6 +49,7 @@ const WeatherFavorite = () => {
       if (favorite) {
         const id = parseInt(favorite.id); // Parse the id as an integer
         await deleteFavorite({ variables: { id } });
+        toast("Deleted " + {city} + " from favorites!")
       }
     } catch (error) {
       console.error("Error Deleting Favorite", error.message);
@@ -64,22 +67,27 @@ const WeatherFavorite = () => {
 
   useEffect(() => {
     setWeatherDataArray([]);
+
     const fetchDataForCity = async (city) => {
+      const formattedCity = encodeURIComponent(city.trim());
+      const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}?unitGroup=metric&include=days%2Ccurrent&key=ANYDS4YH4JZWR9YS8SC2WT7PG&contentType=json`;
+
       try {
-        const response = await axios.get(apiUrl, {
-          params: {
-            location: city,
-            apikey: apiKey,
-          },
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {}
         });
+
+        const data = await response.json();
 
         // Add the weather data for the city to the array
         setWeatherDataArray((prevData) => [
           ...prevData,
-          { city, data: response.data },
+          { city, data: data },
         ]);
-        console.log(response.data)
-        await new Promise(resolve => setTimeout(resolve, 45000));
+
+        console.log(data);
+        await new Promise((resolve) => setTimeout(resolve, 45000));
       } catch (error) {
         console.error(`Error fetching weather data for ${city}:`, error);
       }
@@ -103,7 +111,12 @@ const WeatherFavorite = () => {
 
   const formatUtcDateDay = (utcDate) => {
     const options = { weekday: 'long' };
-    const dayOfWeek = new Intl.DateTimeFormat('en-US', options).format(new Date(utcDate));
+    const date = new Date(utcDate);
+
+    // Add one day to the date
+    date.setDate(date.getDate() + 1);
+
+    const dayOfWeek = new Intl.DateTimeFormat('en-US', options).format(date);
     return dayOfWeek;
   };
 
@@ -118,23 +131,21 @@ const WeatherFavorite = () => {
 
       {weatherDataArray.map((weatherData, index) => (
 
-          <div key={index} className= 'F_Display' style={{display: 'flex', flexDirection: 'row', marginBottom: '10px'}} >
-
+          <div key={index} className= 'F_Display' style={{display: 'flex', flexDirection: 'row', marginBottom: '10px', justifyContent: 'center'}} >
             <div style={{
                 borderColor: 'black',
                 width: '300px',
                 height: '300px',
                 borderRadius: '10px',
                 border: '5px solid black',
-                marginLeft: '500px',
                 display: 'flex', flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',}}
             >
 
-              <p style={{ fontSize: '90px', paddingTop: '10px', marginBottom: '10px' }}>{Math.round((9 / 5) * weatherData.data.timelines.minutely[0].values.temperature + 32)} F</p>
+              <p style={{ fontSize: '90px', paddingTop: '10px', marginBottom: '10px' }}>{Math.round((9 / 5) * weatherData.data.currentConditions.temp + 32)} F</p>
               <h2 style={{ fontSize: '20px', marginBottom: '10px' }}>{weatherData.city}</h2>
-              <p style={{ marginBottom: '60px' }}>{formatUtcDate(weatherData.data.timelines.minutely[0].time)} </p>
+              <p style={{ marginBottom: '60px' }}>{formatUtcDate(weatherData.data.days[1].datetime)} </p>
 
             </div>
 
@@ -142,13 +153,10 @@ const WeatherFavorite = () => {
             <div className="Weather-info" style={{ display: 'flex', borderColor: 'black', width: '400px', height: '300px', borderRadius: '10px', border: '5px solid black' }}>
                 <div style={{ flex: 1, padding: '10px' }}>
 
-                    <p>Humidity: {weatherData.data.timelines.minutely[0].values.humidity}</p>
-                    <p>Wind Speed: {weatherData.data.timelines.minutely[0].values.windSpeed} mph</p>
-                    <p>Visibility: {weatherData.data.timelines.minutely[0].values.visibility}</p>
-                    <p>Rain Intensity: {weatherData.data.timelines.minutely[0].values.rainIntensity}</p>
-                    <p>Snow Intensity: {weatherData.data.timelines.minutely[0].values.snowIntensity}</p>
-                    <p>Cloud Coverage: {weatherData.data.timelines.minutely[0].values.cloudCover}</p>
-                    <p>Freezing Rain Intensity: {weatherData.data.timelines.minutely[0].values.freezingRainIntensity}</p>
+                          <p>Humidity: {weatherData.data.currentConditions.humidity}</p>
+                          <p>Wind Speed: {weatherData.data.currentConditions.windspeed} mph</p>
+                          <p>Visibility: {weatherData.data.currentConditions.visibility}</p>
+                          <p>Cloud Coverage: {weatherData.data.currentConditions.cloudcover}</p>
 
                 </div>
                 <div style={{ flex: 1,  }}>
@@ -158,18 +166,20 @@ const WeatherFavorite = () => {
                     alignItems: 'center', paddingTop: '0px', paddingLeft: '10px'}}
                     >
 
-                        {isNightTime || (weatherData.data.timelines.minutely[0].values.rainIntensity > 10 )&&
-                         (weatherData.data.timelines.minutely[0].values.snowIntensity > 10) &&
-                         (weatherData.data.timelines.minutely[0].values.cloudCover > 0) &&
-                         (weatherData.data.timelines.minutely[0].values.windSpeed > 10)  ? <IconWiMoonrise/> : <IconWiDaySunny/>}
+                                {isNightTime ? (
+                                  <IconWiMoonrise />
+                                ) : (
+                                  weatherData && !(
 
-                        {weatherData.data.timelines.minutely[0].values.rainIntensity > 10 && <IconWiRainMix />}
+                                    weatherData.data.currentConditions.cloudcover > 25 &&
+                                    weatherData.data.currentConditions.windspeed > 8
+                                  ) ? <IconWiDaySunny /> : null
+                                )}
 
-                        {weatherData.data.timelines.minutely[0].values.snowIntensity > 5 && <IconWiSnowflakeCold />}
 
-                        {weatherData.data.timelines.minutely[0].values.cloudCover > 25 && <IconWiCloudy />}
+                            {weatherData.data.currentConditions.cloudcover > 25 && <IconWiCloudy />}
 
-                        {weatherData.data.timelines.minutely[0].values.windSpeed > 10 && <IconWiStrongWind />}
+                            {weatherData.data.currentConditions.windspeed > 8 && <IconWiStrongWind />}
 
 
                     </div>
@@ -190,12 +200,11 @@ const WeatherFavorite = () => {
 
 
                   <div style={{display: 'flex', flexDirection: 'column'}} >
-
-                  {weatherData.data.timelines.daily.map((day, innerIndex) => (
-                    <div key={innerIndex} style={{display: 'flex', flexDirection: 'row', marginLeft: '10px' }}>
-                      <p>{innerIndex === 0 ? 'Today' : formatUtcDateDay(day.time)}</p>
-                      <p style={{marginLeft: '5px'}} >- {innerIndex === 0 ? Math.round((9 / 5) * weatherData.data.timelines.minutely[0].values.temperature + 32) : Math.round((9 / 5) * day.values.temperatureAvg +32)} F</p>
-                    </div>
+                  <p style={{ marginLeft: '10px' }} >Today - {Math.round((9 / 5) * weatherData.data.currentConditions.temp + 32)} F</p>
+                  {weatherData.data.days.slice(0, 5).map((day, innerIndex) => (
+                        <div key={innerIndex} style={{display: 'flex', flexDirection: 'row', marginLeft: '10px' }}>
+                          <p>{formatUtcDateDay(day.datetime)} - {Math.round((9 / 5) * day.temp + 32)} F</p>
+                        </div>
                   ))}
 
                   </div>
@@ -203,10 +212,13 @@ const WeatherFavorite = () => {
 
             </div>
 
-            <button onClick={() => handleDelete(weatherData.city)} style={{ marginLeft: '10px', borderRadius: '5px', width: '50px', height: '30px', borderRadius: '5px', cursor: 'pointer' }}> <FaTrash/></button>
+            <button onClick={() => handleDelete(weatherData.city)} style={{ marginLeft: '10px', borderRadius: '5px', width: '50px', height: '30px', cursor: 'pointer' }}> <FaTrash/></button>
 
           </div>
+
           ))}
+
+
 
     </div>
   );

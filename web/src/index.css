@@ -1,3 +1,5 @@
 body{
-  background-color:#01ACFC;
+  background: linear-gradient(0deg, white, #01ACFC);
+  height: 100%;
+  width: 100%;
 }
