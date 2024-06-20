@@ -10,6 +10,7 @@ import IconWiStrongWind from './wind';
 import IconWiMoonrise from './moon';
 import { FaTrash } from 'react-icons/fa';
 import { toast } from '@redwoodjs/web/toast'
+import { useAuth } from "src/auth";
 
 
 const apiUrl = 'https://api.tomorrow.io/v4/weather/forecast';
@@ -35,9 +36,12 @@ const DELETE_FAVORITE_MUTATION = gql`
 
 `;
 
+
 const WeatherFavorite = () => {
   const [weatherDataArray, setWeatherDataArray] = useState([]);
   const { data } = useQuery(QUERY);
+  const{ isAuthenticated }  = useAuth()
+
 
   const [deleteFavorite] = useMutation(DELETE_FAVORITE_MUTATION, {
     refetchQueries: [{query: QUERY}],
@@ -69,6 +73,8 @@ const WeatherFavorite = () => {
     setWeatherDataArray([]);
 
     const fetchDataForCity = async (city) => {
+      if(!isAuthenticated)return;
+
       const formattedCity = encodeURIComponent(city.trim());
       const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}?unitGroup=metric&include=days%2Ccurrent&key=ANYDS4YH4JZWR9YS8SC2WT7PG&contentType=json`;
 

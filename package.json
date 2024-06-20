@@ -26,11 +26,14 @@
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
+    "@material-ui/core": "^4.12.4",
+    "@material-ui/icons": "^4.11.3",
     "@mui/material": "^5.15.19",
     "@mui/x-date-pickers": "^7.6.1",
     "@prisma/client": "^5.10.2",
     "axios": "^1.6.7",
     "dayjs": "^1.11.11",
+    "material-ui-popup-state": "^5.1.2",
     "react-icons": "^5.0.1"
   }
 }
