@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Metadata, useMutation } from '@redwoodjs/web';
-import axios from 'axios';
 import { gql, useQuery } from '@redwoodjs/web';
 import IconWiDaySunny from './sun';
 import IconWiRainMix from './rain';
@@ -14,7 +13,7 @@ import { useAuth } from "src/auth";
 
 
 const apiUrl = 'https://api.tomorrow.io/v4/weather/forecast';
-const apiKey = 'ANYDS4YH4JZWR9YS8SC2WT7PG';
+const apiKey = 'process.env.WEATHER_API_KEY';
 
 export const QUERY = gql`
   query FavoritesQuery {
@@ -40,11 +39,11 @@ const DELETE_FAVORITE_MUTATION = gql`
 const WeatherFavorite = () => {
   const [weatherDataArray, setWeatherDataArray] = useState([]);
   const { data } = useQuery(QUERY);
-  const{ isAuthenticated }  = useAuth()
+  const { isAuthenticated } = useAuth()
 
 
   const [deleteFavorite] = useMutation(DELETE_FAVORITE_MUTATION, {
-    refetchQueries: [{query: QUERY}],
+    refetchQueries: [{ query: QUERY }],
   })
 
   const handleDelete = async (city) => {
@@ -53,7 +52,7 @@ const WeatherFavorite = () => {
       if (favorite) {
         const id = parseInt(favorite.id); // Parse the id as an integer
         await deleteFavorite({ variables: { id } });
-        toast("Deleted " + {city} + " from favorites!")
+        toast("Deleted " + { city } + " from favorites!")
       }
     } catch (error) {
       console.error("Error Deleting Favorite", error.message);
@@ -73,7 +72,7 @@ const WeatherFavorite = () => {
     setWeatherDataArray([]);
 
     const fetchDataForCity = async (city) => {
-      if(!isAuthenticated)return;
+      if (!isAuthenticated) return;
 
       const formattedCity = encodeURIComponent(city.trim());
       const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}?unitGroup=metric&include=days%2Ccurrent&key=ANYDS4YH4JZWR9YS8SC2WT7PG&contentType=json`;
@@ -129,100 +128,106 @@ const WeatherFavorite = () => {
 
   return (
     <div>
-      <h2 style={{ fontFamily: 'cursive', textDecoration: 'underline'}}>{'Your Cities'}</h2>
-      <p>
-
-      </p>
-
-
+      {isAuthenticated ?
+        <h2 style={{ fontFamily: 'cursive', textDecoration: 'underline' }}>{'Your Cities'}</h2>
+        :
+        <div style={{display: 'flex', justifyContent: 'center', alignContent: 'center', paddingTop: '30px'}}>
+          <a style={{ display: 'inline-block', borderRadius: '5px', backgroundColor: 'whitesmoke', fontSize: '20px', padding: '10px' }}>Login to view your favorite cities!</a>
+        </div>
+      }
+      {/*This is the weather forecast display*/}
       {weatherDataArray.map((weatherData, index) => (
 
-          <div key={index} className= 'F_Display' style={{display: 'flex', flexDirection: 'row', marginBottom: '10px', justifyContent: 'center'}} >
-            <div style={{
-                borderColor: 'black',
-                width: '300px',
-                height: '300px',
-                borderRadius: '10px',
-                border: '5px solid black',
-                display: 'flex', flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',}}
-            >
+        <div key={index} className='F_Display' style={{ display: 'flex', flexDirection: 'row', marginBottom: '10px', justifyContent: 'center' }} >
+          <div style={{
+            borderColor: 'black',
+            width: '300px',
+            height: '300px',
+            borderRadius: '10px',
+            border: '5px solid black',
+            display: 'flex', flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          >
 
-              <p style={{ fontSize: '90px', paddingTop: '10px', marginBottom: '10px' }}>{Math.round((9 / 5) * weatherData.data.currentConditions.temp + 32)} F</p>
-              <h2 style={{ fontSize: '20px', marginBottom: '10px' }}>{weatherData.city}</h2>
-              <p style={{ marginBottom: '60px' }}>{formatUtcDate(weatherData.data.days[1].datetime)} </p>
-
-            </div>
-
-
-            <div className="Weather-info" style={{ display: 'flex', borderColor: 'black', width: '400px', height: '300px', borderRadius: '10px', border: '5px solid black' }}>
-                <div style={{ flex: 1, padding: '10px' }}>
-
-                          <p>Humidity: {weatherData.data.currentConditions.humidity}</p>
-                          <p>Wind Speed: {weatherData.data.currentConditions.windspeed} mph</p>
-                          <p>Visibility: {weatherData.data.currentConditions.visibility}</p>
-                          <p>Cloud Coverage: {weatherData.data.currentConditions.cloudcover}</p>
-
-                </div>
-                <div style={{ flex: 1,  }}>
-                    <div style={{display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center', paddingTop: '0px', paddingLeft: '10px'}}
-                    >
-
-                                {isNightTime ? (
-                                  <IconWiMoonrise />
-                                ) : (
-                                  weatherData && !(
-
-                                    weatherData.data.currentConditions.cloudcover > 25 &&
-                                    weatherData.data.currentConditions.windspeed > 8
-                                  ) ? <IconWiDaySunny /> : null
-                                )}
-
-
-                            {weatherData.data.currentConditions.cloudcover > 25 && <IconWiCloudy />}
-
-                            {weatherData.data.currentConditions.windspeed > 8 && <IconWiStrongWind />}
-
-
-                    </div>
-                </div>
-            </div>
-
-            <div style={{
-                borderColor: 'black',
-                width: '300px',
-                height: '300px',
-                borderRadius: '10px',
-                border: '5px solid black',
-                display: 'flex', flexDirection: 'column',
-
-                }}
-            >
-              <div style={{}}>
-
-
-                  <div style={{display: 'flex', flexDirection: 'column'}} >
-                  <p style={{ marginLeft: '10px' }} >Today - {Math.round((9 / 5) * weatherData.data.currentConditions.temp + 32)} F</p>
-                  {weatherData.data.days.slice(0, 5).map((day, innerIndex) => (
-                        <div key={innerIndex} style={{display: 'flex', flexDirection: 'row', marginLeft: '10px' }}>
-                          <p>{formatUtcDateDay(day.datetime)} - {Math.round((9 / 5) * day.temp + 32)} F</p>
-                        </div>
-                  ))}
-
-                  </div>
-              </div>
-
-            </div>
-
-            <button onClick={() => handleDelete(weatherData.city)} style={{ marginLeft: '10px', borderRadius: '5px', width: '50px', height: '30px', cursor: 'pointer' }}> <FaTrash/></button>
+            <p style={{ fontSize: '90px', paddingTop: '10px', marginBottom: '10px' }}>{Math.round((9 / 5) * weatherData.data.currentConditions.temp + 32)} F</p>
+            <h2 style={{ fontSize: '20px', marginBottom: '10px' }}>{weatherData.city}</h2>
+            <p style={{ marginBottom: '60px', font: 'caption' }}>{formatUtcDate(weatherData.data.days[1].datetime)} </p>
 
           </div>
 
-          ))}
+
+          <div className="Weather-info" style={{ display: 'flex', borderColor: 'black', width: '400px', height: '300px', borderRadius: '10px', border: '5px solid black' }}>
+            <div style={{ flex: 1, padding: '10px', font: 'caption' }}>
+
+              <p>Humidity: {weatherData.data.currentConditions.humidity}</p>
+              <p>Wind Speed: {weatherData.data.currentConditions.windspeed} mph</p>
+              <p>Visibility: {weatherData.data.currentConditions.visibility}</p>
+              <p>Cloud Coverage: {weatherData.data.currentConditions.cloudcover}</p>
+
+            </div>
+            <div style={{ flex: 1, }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center', paddingTop: '0px', paddingLeft: '10px'
+              }}
+              >
+
+                {isNightTime ? (
+                  <IconWiMoonrise />
+                ) : (
+                  weatherData && !(
+
+                    weatherData.data.currentConditions.cloudcover > 25 &&
+                    weatherData.data.currentConditions.windspeed > 8
+                  ) ? <IconWiDaySunny /> : null
+                )}
+
+
+                {weatherData.data.currentConditions.cloudcover > 25 && <IconWiCloudy />}
+
+                {weatherData.data.currentConditions.windspeed > 8 && <IconWiStrongWind />}
+
+
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            borderColor: 'black',
+            width: '300px',
+            height: '300px',
+            borderRadius: '10px',
+            border: '5px solid black',
+            display: 'flex', flexDirection: 'column',
+
+          }}
+          >
+            <div style={{}}>
+
+
+              <div style={{ display: 'flex', flexDirection: 'column' }} >
+
+                <p style={{ marginLeft: '10px', font: 'caption' }} >Today - {Math.round((9 / 5) * weatherData.data.currentConditions.temp + 32)} F</p>
+                {weatherData.data.days.slice(1, 6).map((day, innerIndex) => (
+                  <div key={innerIndex} style={{ display: 'flex', flexDirection: 'row', marginLeft: '10px' }}>
+                    <p style={{font: 'caption'}}>{formatUtcDateDay(day.datetime)} - {Math.round((9 / 5) * day.temp + 32)} F</p>
+                  </div>
+                ))}
+
+              </div>
+            </div>
+
+          </div>
+
+          <button onClick={() => handleDelete(weatherData.city)} style={{ marginLeft: '10px', borderRadius: '5px', width: '50px', height: '30px', cursor: 'pointer' }}> <FaTrash /></button>
+
+        </div>
+
+      ))}
 
 
 

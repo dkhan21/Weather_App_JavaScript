@@ -9,37 +9,33 @@ import MenuItem from '@mui/material/MenuItem';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import Switch from '@mui/material/Switch';
 
-
 const NavBar = () => {
-
   const linkStyle = {
     textDecoration: 'none',
     color: 'white',
     fontSize: '20px',
     margin: '0 20px' // Adjust margin as needed for spacing between links
   };
-  {/*This function will handle the meenu to close after selection and the logout feature initializes*/ }
+
   const handleLogout = (closePopup) => {
     logOut();
     closePopup();
     window.location.reload();
   };
 
-  {/*This function is initialized to ract with the switch component which will change the backgroung color */ }
   const [checked, setChecked] = React.useState(true);
   const handleChange = (event) => {
     setChecked(event.target.checked);
   };
 
-  {/*We are using a useEffect to update the background color in real time when the switch is set*/}
   useEffect(() => {
     if (checked) {
       document.body.style.background = 'linear-gradient(0deg, #01ACFC, white)';
     } else {
       document.body.style.background = 'linear-gradient(0deg, white, gray)';
+
     }
   }, [checked]);
-
 
   const { isAuthenticated, currentUser, logOut } = useAuth();
   return (
@@ -66,31 +62,21 @@ const NavBar = () => {
           textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
           // Add text shadow for more emphasis
         }}
-
           onMouseOver={(e) => {
             e.currentTarget.style.textDecoration = 'underline';
           }}
-
           onMouseOut={(e) => {
             e.currentTarget.style.textDecoration = 'none'
           }}
-
         >WeatherTracker</Link>
         {/*About and help section in the nav bar*/}
         <div style={{ display: 'flex', alignItems: 'center' }}>
-
           <Switch
             checked={checked}
             onChange={handleChange}
             inputProps={{ 'aria-label': 'controlled' }}
           />
-
-          <Link to={routes.about()} style={{
-            textDecoration: 'none',
-            color: 'white',
-            fontSize: '20px',
-            margin: '0 20px'
-          }}
+          <Link to={routes.about()} style={linkStyle}
             onMouseOver={(e) => {
               e.currentTarget.style.textDecoration = 'underline'
             }}
@@ -98,13 +84,7 @@ const NavBar = () => {
               e.currentTarget.style.textDecoration = 'none'
             }}
           >About</Link>
-
-          <Link to={routes.help()} style={{
-            textDecoration: 'none',
-            color: 'white',
-            fontSize: '20px',
-            margin: '0 20px',
-          }}
+          <Link to={routes.help()} style={linkStyle}
             onMouseOver={(e) => {
               e.currentTarget.style.textDecoration = 'underline'
             }}
@@ -112,8 +92,6 @@ const NavBar = () => {
               e.currentTarget.style.textDecoration = 'none'
             }}
           >Help</Link>
-
-          {/*Created a conditiont statement for the login button or name with logout option*/}
           {isAuthenticated ?
             <PopupState variant="popover" popupId="demo-popup-menu">
               {(popupState) => (
@@ -127,13 +105,19 @@ const NavBar = () => {
                 </React.Fragment>
               )}
             </PopupState>
-
             :
-            <Link to={routes.login()} style={linkStyle}>Login</Link>
+            <Link
+              onMouseOver={(e) => {
+                e.currentTarget.style.textDecoration = 'underline'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.textDecoration = 'none'
+              }} to={routes.login()} style={linkStyle}
+            >Login</Link>
           }
         </div>
       </nav>
-    </div >
+    </div>
   );
 }
 

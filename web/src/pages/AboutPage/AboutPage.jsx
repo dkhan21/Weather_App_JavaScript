@@ -14,7 +14,7 @@ const AboutPage = () => {
           <h2 style={{ fontSize: '50px', justifyContent: 'center', display: 'flex', color: 'black' }}>What is this site?</h2>
           <div style={{ width: '900px', padding: '20px', border: 'none', lineHeight: '1.5', borderRadius: '20px', background: 'linear-gradient(0deg, white, lightblue)' }}>
             <a style={{ fontSize: '27px', font: 'inherit' }}>
-              This weather app provides accurate and up-to-date weather forecasts for any location. You can check the current weather conditions or select a specific date to see the forecast for that day. Addition to that, login to save the cities you want for your future arrivals. Whether you're planning a trip or just curious about the weather, our app has you covered.
+              This weather application provides accurate and up-to-date weather forecasts for any location. You can check the current weather conditions or select a specific date to see the forecast for that day. Addition to that, login to save the cities you want for your future arrivals. Whether you're planning a trip or just curious about the weather, our application has you covered.
             </a>
           </div>
 

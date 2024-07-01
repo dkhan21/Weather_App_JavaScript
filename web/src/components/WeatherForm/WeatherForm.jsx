@@ -10,16 +10,17 @@ import IconWiStrongWind from 'src/components/WeatherFavorite/wind';
 import IconWiMoonrise from 'src/components/WeatherFavorite/moon';
 import { FaStar } from 'react-icons/fa';
 import { useAuth } from 'src/auth';
-import { toast, Toaster } from '@redwoodjs/web/toast'
+import { Toaster, toast } from '@redwoodjs/web/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 import { Link, routes } from '@redwoodjs/router'
 import NavBar from 'src/components/NavBar'
+import { QUERY } from '../WeatherFavorite/WeatherFavorite';
 
 const apiUrl = 'https://api.tomorrow.io/v4/weather/forecast';
-const apiKey = 'LHpzgcsFLTJaoGReRuYIKDxYzz4IeSLz';
+const apiKey = 'process.env.WEATHER_API_KEY';
 
 const CREATE = gql`
   mutation CreateFavoriteMutation($input: CreateFavoriteInput!) {
@@ -30,13 +31,14 @@ const CREATE = gql`
 
 `
 
-
 const WeatherForm = () => {
+
   const [city, setCity] = useState('')
   const [weatherData, setWeatherData] = useState();
   const { isAuthenticated, currentUser, logOut } = useAuth()
-  const [createFavorite, { loading, error }] = useMutation(CREATE);
-
+  const [createFavorite, { loading, error }] = useMutation(CREATE, {
+    refetchQueries: [{ query: QUERY }],
+  });
 
   //This is for handling the users selected date for the city they want the forecast of.
   //Uses material ui, imoprted the calender.
@@ -64,10 +66,10 @@ const WeatherForm = () => {
   };
 
 
-
   useEffect(() => {
     console.log('Formatted Date:', selectedDate);
   }, [selectedDate]);
+
 
 
 
@@ -101,7 +103,7 @@ const WeatherForm = () => {
 
   };
 
-  //function called in submit button for search bar+ changes the city value for location parameter
+  //function called in submit button for search bar changes the city value for location parameter
   const handleCityChange = event => {
     setCity(event.target.value);
   };
@@ -109,7 +111,7 @@ const WeatherForm = () => {
   const formatUtcDate = (utcDate) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     const date = new Date(utcDate);
-    if (selectedDate === formatDate(new Date())) {
+    if (formatDate(selectedDate) === formatDate(new Date())) {
       date.setDate(date.getDate() + 1);
     } else {
       date.setDate(date.getDate() + 0);
@@ -123,7 +125,8 @@ const WeatherForm = () => {
     try {
       const input = { city: city };
       await createFavorite({ variables: { input } });
-      toast.success('Successfully added city to Favorites!')
+      getWeather();
+      toast.success("Successfully saved city as Favorites")
     } catch (error) {
       console.error('Error adding to favorites:', error);
       toast('Could not add city to Favorites');
@@ -179,12 +182,11 @@ const WeatherForm = () => {
         </div>
         {weatherData && (
           <div>
-            <h2 style={{ fontFamily: 'cursive', textDecoration: 'underline' }}>Search Results</h2>
+            <h2 style={{ fontFamily: 'cursive', textDecoration: 'underline', paddingleft: '20px' }}>Search Results</h2>
             {/*Created a Main box to be centered into the the middle of the site. Which contains 3 boxes inside*/}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               {/*This is the first box which contains the temperature*/}
               <div style={{ display: 'flex', flexDirection: 'row', marginBottom: '10px', }}>
-
 
 
                 <div style={{
@@ -199,21 +201,26 @@ const WeatherForm = () => {
                 }}
                 >
 
+                  { }
+                  {formatDate(selectedDate) === formatDate(new Date()) ?
+                    <p style={{ fontSize: '90px', paddingTop: '10px', marginBottom: '10px' }}>{Math.round((9 / 5) * weatherData.currentConditions.temp + 32)} F</p>
+                    :
+                    <p style={{ fontSize: '90px', paddingTop: '10px', marginBottom: '10px' }}>{Math.round((9 / 5) * weatherData.days[0].temp + 32)} F</p>
 
-                  <p style={{ fontSize: '90px', paddingTop: '10px', marginBottom: '10px' }}>{Math.round((9 / 5) * weatherData.days[0].temp + 32)} F</p>
+                  }
                   <h2 style={{ fontSize: '20px', marginBottom: '10px' }}>{city}</h2>
-                  <p style={{ marginBottom: '60px' }}>{formatUtcDate(weatherData.days[0].datetime)} </p>
+                  <p style={{ marginBottom: '60px', font: 'caption' }}>{formatUtcDate(weatherData.days[0].datetime)} </p>
 
                 </div>
                 {/* 2nd Box that contains the extra details and icons for the day*/}
                 <div style={{ display: 'flex', borderColor: 'black', width: '400px', height: '300px', borderRadius: '10px', border: '5px solid black' }} >
-                  <div style={{ flex: 1, padding: '10px' }}>
+                  <div style={{ flex: 1, padding: '10px', font: 'caption' }}>
 
 
-                    <p>Humidity: {weatherData.days[0].humidity}</p>
-                    <p>Wind Speed: {weatherData.days[0].windspeed} mph</p>
-                    <p>Visibility: {weatherData.days[0].visibility}</p>
-                    <p>Cloud Coverage: {weatherData.days[0].cloudcover}</p>
+                    <p>Humidity: {weatherData.currentConditions.humidity}</p>
+                    <p>Wind Speed: {weatherData.currentConditions.windspeed} mph</p>
+                    <p>Visibility: {weatherData.currentConditions.visibility}</p>
+                    <p>Cloud Coverage: {weatherData.currentConditions.cloudcover}</p>
 
                   </div>
                   <div style={{ flex: 1, }}>
@@ -263,18 +270,29 @@ const WeatherForm = () => {
                       //It displays the weather forecast thru out the week.
                       //Starts with 1-7. But index 0 is first day.
                       */}
+                    {/*This condition checks for if the current day is selected*/}
 
-                    {formatDate(selectedDate) === formatDate(new Date()) ? <p style={{ marginLeft: '10px' }} >Today - {Math.round((9 / 5) * weatherData.currentConditions.temp + 32)} F</p> :
+                    {formatDate(selectedDate) === formatDate(new Date()) ? (
+                      <>
+                        <p style={{ marginLeft: '10px', font: 'caption' }}>
+                          Today - {Math.round((9 / 5) * weatherData.currentConditions.temp + 32)} F
+                        </p>
+                        {weatherData.days.slice(1, 6).map((day, innerIndex) => (
+                          <div key={innerIndex} style={{ display: 'flex', flexDirection: 'row', marginLeft: '10px' }}>
+                            <p style={{font: 'caption'}}>{formatUtcDateDay(day.datetime)} - {Math.round((9 / 5) * day.temp + 32)} F</p>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <>
+                      <p style={{ marginLeft: '10px' , font: 'caption'}}>
+                        Today - {Math.round((9 / 5) * weatherData.days[0].temp + 32)} F
+                      </p>
+                      <li style={{ marginLeft: '10px', font: 'caption' }}>To see weather forecast for the week, Select the current day</li>
+                      </>
+                    )}
 
-                      <p style={{ marginLeft: '10px' }} >Today - {Math.round((9 / 5) * weatherData.days[0].temp + 32)} F</p>
-                    }
 
-
-                    {weatherData.days.slice(0, 5).map((day, innerIndex) => (
-                      <div key={innerIndex} style={{ display: 'flex', flexDirection: 'row', marginLeft: '10px' }}>
-                        <p>{formatUtcDateDay(day.datetime)} - {Math.round((9 / 5) * day.temp + 32)} F</p>
-                      </div>
-                    ))}
 
                   </div>
 
@@ -303,13 +321,12 @@ const WeatherForm = () => {
 
       </main>
 
-      <main>
 
-
-      </main>
 
 
     </div>
+
+
   )
 }
 

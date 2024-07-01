@@ -6,12 +6,20 @@ html, body {
   background: linear-gradient(0deg, white, #01ACFC);
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 #root {
-  min-height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .container {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
